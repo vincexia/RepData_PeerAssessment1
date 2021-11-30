@@ -7,10 +7,28 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```{r load_data, echo=TRUE}
+dt <- read.csv("activity.csv")
+dt2 <- dt[complete.cases(dt), ]
+```
 
 
 ## What is mean total number of steps taken per day?
+
+Calculate the total number of steps taken per day
+```{r total_number_per_day, echo=TRUE, message=FALSE}
+library(tidyverse)
+dt3 <- dt2 %>% group_by(date) %>% summarise(sum = sum(steps))
+head(dt3)
+```
+  
+Make a histogram of the total number of steps taken each day
+```{r histogram, echo=TRUE}
+hist(dt3$sum, main="Histogram of Total Number of Steps Taken Each Day",
+    xlab="Number of Steps Taken Each Day")
+```
+  
+Calculate and report the mean and median of the total number of steps taken per day
 
 
 
