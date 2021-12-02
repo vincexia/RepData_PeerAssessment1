@@ -15,29 +15,76 @@ dt2 <- dt[complete.cases(dt), ]
 
 ## What is mean total number of steps taken per day?
 
-Calculate the total number of steps taken per day
+### Calculate the total number of steps taken per day
 ```{r total_number_per_day, echo=TRUE, message=FALSE}
 library(tidyverse)
 dt3 <- dt2 %>% group_by(date) %>% summarise(sum = sum(steps))
 head(dt3)
 ```
   
-Make a histogram of the total number of steps taken each day
+### Make a histogram of the total number of steps taken each day
 ```{r histogram, echo=TRUE}
 hist(dt3$sum, main="Histogram of Total Number of Steps Taken Each Day",
     xlab="Number of Steps Taken Each Day")
 ```
   
-Calculate and report the mean and median of the total number of steps taken per day
-
-
+### Calculate and report the mean and median of the total number of steps taken per day
+```{r mean_median, echo=TRUE}
+mean <- mean(dt3$sum)
+median <- median(dt3$sum)
+```
+The mean and median of the total number of steps taken per day are `r mean` and `r median`.
 
 ## What is the average daily activity pattern?
+### Make a time series plot (i.e. \color{red}{\verb|type = "l"|}type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r avg_daily_activity_plot, echo=TRUE}
+dt4 <- dt2 %>% group_by(interval) %>% summarise(avg = mean(steps))
+plot(dt4$interval, dt4$avg, type="l", lty=1, xlab="5-minute interval", 
+     ylab="Average number of steps taken aross all days")
+```
 
-
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r interval, echo=TRUE}
+interval <- dt4[dt4$avg == max(dt4$avg),]$interval
+```
+The 5-minute interval `r interval` contains the maximum number of steps.
 
 ## Imputing missing values
+### Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with \color{red}{\verb|NA|}NAs)
 
+```{r missing_values, echo=TRUE}
+df <- as.data.frame(table(complete.cases(dt)))
+count <- df[df$Var1 == FALSE, ]$Freq
+```
+The total number of missing values in the dataset is `r count`.
 
+### Devise a strategy for filling in all of the missing values in the dataset.  
+Use the mean for that 5-minute interval to fill the missing values.
+```{r merge, echo=TRUE, cache=TRUE}
+merged_df <- merge(x=dt, y=dt4, by="interval", all.x=TRUE)
+
+for(i in 1:nrow(merged_df)) {
+  row <- merged_df[i,]
+  merged_df[i,]$steps <- ifelse(is.na(row$steps), row$avg, row$steps)
+}
+
+new_dt <- merged_df %>% select(steps, date, interval) %>% arrange(date)
+head(new_dt)
+```
+
+### Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```{r new_hist, echo=TRUE}
+new_dt1 <- new_dt %>% group_by(date) %>% summarise(sum = sum(steps))
+hist(new_dt1$sum, main="Histogram of Total Number of Steps Taken Each Day",
+    xlab="Number of Steps Taken Each Day")
+```
+```{r new_mean_median, echo=TRUE}
+new_mean <- mean(new_dt1$sum)
+new_median <- median(new_dt1$sum)
+```
+The mean and median of the total number of steps taken per day are `r new_mean` and `r new_median`.
+
+These values differ from the estimates from the first part of the assignment. 
+The impact is that total daily number of steps increases.
 
 ## Are there differences in activity patterns between weekdays and weekends?
